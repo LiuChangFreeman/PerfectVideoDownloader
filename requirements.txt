@@ -1,0 +1,3 @@
+pywin32==225
+selenium==3.141.0
+requests==2.22.0
