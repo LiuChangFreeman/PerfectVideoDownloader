@@ -7,6 +7,8 @@ import os
 import re
 import json
 import requests
+from bs4 import BeautifulSoup
+import time
 
 chrome=None
 
@@ -62,6 +64,37 @@ def main():
             if "youku" in url:
                 url_download=driver.execute_script("return videoPlayer.getData()._playlistData.stream[0].m3u8_url;")
             elif "qq" in url:
+                fail_count = 0
+                html = driver.page_source
+                soup = BeautifulSoup(html, "html.parser")
+                labels = soup.select(".txp_label")
+                resolution = labels[0].text
+                if resolution != u"蓝光":
+                    print(u"正在切换至最高画质")
+                    menu = driver.find_element_by_class_name("txp_popup_content")
+                    items = menu.find_elements_by_class_name("txp_menuitem")
+                    for item in items:
+                        data = item.get_attribute("data-definition")
+                        if data == "fhd":
+                            print(u"点击切换")
+                            driver.execute_script("arguments[0].click();", item)
+                            time.sleep(1)
+                            break
+                    while True:
+                        if fail_count > 3:
+                            print(u"放弃切换分辨率")
+                            break
+                        html = driver.page_source
+                        if u"正在为您切换清晰度" in html:
+                            print(u"正在切换")
+                            time.sleep(1)
+                        elif u"已成功为您切换清晰度" in html:
+                            print(u"切换成功")
+                            break
+                        else:
+                            print(u"切换失败")
+                            fail_count += 1
+                            time.sleep(1)
                 url_download = driver.execute_script("return PLAYER._DownloadMonitor.context.dataset.currentVideoUrl;")
             elif "iqiyi" in url:
                 url_download=os.path.join(os.path.abspath(os.path.curdir),u"{}.m3u8".format(title))
