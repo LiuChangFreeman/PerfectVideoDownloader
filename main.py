@@ -121,7 +121,7 @@ def main():
             else:
                 continue
             print(u"已获取到m3u8地址:\n{}".format(url_download))
-            command = u"m3u8dl \"{}\" --workDir \"{}\" --saveName \"{}\" --maxThreads {} --minThreads {} --enableDelAfterDone --disableDateInfo --stopSpeed 1024 --noProxy".format(url_download,path_to_save,title,threads,threads)
+            command = u"N_m3u8DL-CLI \"{}\" --workDir \"{}\" --saveName \"{}\" --maxThreads {} --minThreads {} --enableDelAfterDone --disableDateInfo --stopSpeed 1024 --noProxy".format(url_download,path_to_save,title,threads,threads)
             command=command.encode("gbk")
             os.system(command)
             if os.path.exists(url_download):
