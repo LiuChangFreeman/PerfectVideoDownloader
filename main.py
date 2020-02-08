@@ -25,14 +25,8 @@ port_chrome=9224
 # 待下载的剧集
 url_videos=[
     {
-        "title": "庆余年: 第1集", "url": "https://www.iqiyi.com/v_19ruzj8gv0.html"
-    },
-    {
-        "title": "鹤唳华亭：第1集", "url": "https://v.youku.com/v_show/id_XNDQyNzg0MjgzNg==.html"
-    },
-    {
-        "title": "庆余年 第1集", "url": "https://v.qq.com/x/cover/rjae621myqca41h.html"
-    },
+        "title": "庆余年: 第14集", "url": "https://www.iqiyi.com/v_19rurcgqzs.html"
+    }
 ]
 
 def launch_chrome():
@@ -54,7 +48,12 @@ def main():
     chrome_options = Options()
     chrome_options.add_argument('disable-infobars')
     chrome_options.add_experimental_option('debuggerAddress', '127.0.0.1:{}'.format(port_chrome))
-    driver = webdriver.Chrome(chrome_options=chrome_options)
+    if version_info.major == 2:
+        command = u"N_m3u8DL-CLI \"{}\" --workDir \"{}\" --saveName \"{}\" --maxThreads {} --minThreads {} --enableDelAfterDone --disableDateInfo --stopSpeed 1024 --noProxy"
+        driver = webdriver.Chrome(chrome_options=chrome_options)
+    else:
+        command = r"N_m3u8DL-CLI \"{}\" --workDir \"{}\" --saveName \"{}\" --maxThreads {} --minThreads {} --enableDelAfterDone --disableDateInfo --stopSpeed 1024 --noProxy"
+        driver = webdriver.Chrome(options=chrome_options)
     driver.set_page_load_timeout(60)
     driver.set_script_timeout(60)
 
@@ -107,9 +106,25 @@ def main():
                 script_iqiyi = open("iqiyi.js").read()
                 driver.execute_script(script_iqiyi)
                 dash_url=driver.execute_script("return window.dashUrl;")
-                response=requests.get(dash_url)
+                print(dash_url)
+                cookies = driver.get_cookies()
+                cookie = ""
+                for item in cookies:
+                    cookie += "{}={}; ".format(item["name"], item["value"])
+                headers={}
+                headers["Host"]="cache.video.iqiyi.com"
+                headers["Connection"]="keep-alive"
+                headers["User-Agent"]="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36"
+                headers["Accept"]="*/*"
+                headers["Sec-Fetch-Site"]="same-site"
+                headers["Sec-Fetch-Mode"]="no-cors"
+                headers["Referer"]="https://www.iqiyi.com/v_19rurcgqzs.html"
+                headers["Accept-Encoding"]="gzip, deflate, br"
+                headers["Accept-Language"]="zh-CN,zh;q=0.9"
+                headers["Cookie"]=cookie
+                response=requests.get(dash_url,headers=headers,timeout=15)
                 result=response.text
-                data = re.findall("(?<=NILAODA\().*(?=\);)", result, re.DOTALL)
+                data = re.findall("{\".*\"}", result, re.DOTALL)
                 data = json.loads(data[0])
                 videos = data["data"]["program"]["video"]
                 for video in videos:
@@ -120,21 +135,32 @@ def main():
                         break
             else:
                 continue
-            print(u"已获取到m3u8地址:\n{}".format(url_download))
-            command = u"N_m3u8DL-CLI \"{}\" --workDir \"{}\" --saveName \"{}\" --maxThreads {} --minThreads {} --enableDelAfterDone --disableDateInfo --stopSpeed 1024 --noProxy".format(url_download,path_to_save,title,threads,threads)
-            command=command.encode("gbk")
+            print(u"已获取到m3u8地址:\n{}\n".format(url_download))
+            command =command.format(url_download,path_to_save,title,threads,threads)
+            if version_info.major == 2:
+                command=command.encode("gbk")
+            else:
+                command=command.replace("\\\"","\"")
             os.system(command)
             if os.path.exists(url_download):
                 os.remove(url_download)
         except Exception as e:
+            print(u"发生异常:")
             print(e)
 
     # 退出chrome
     try:
+        print(u"正在关闭Chrome进程")
         driver.quit()
         win32process.TerminateProcess(chrome[0], 0)
+        os.system("taskkill /IM software_reporter_tool.exe /F")
     except:
         pass
+    print(u"按任意键退出")
+    if version_info.major == 2:
+        raw_input()
+    else:
+        input()
 
 if __name__=="__main__":
     main()
