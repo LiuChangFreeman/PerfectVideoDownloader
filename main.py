@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from sys import version_info
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import win32process
@@ -37,16 +38,19 @@ url_videos=[
 def launch_chrome():
     global chrome
     if os.path.exists(chrome_path):
+        command="\"{}\"--remote-debugging-port={}".format(chrome_path, port_chrome)
+        print(u"如果Chrome白屏，请使用CMD手动运行以下命令:\n{}".format(command))
         chrome = win32process.CreateProcess(None, "{} --remote-debugging-port={}".format(chrome_path, port_chrome),None, None, 0, 0, None, None, win32process.STARTUPINFO())
     else:
         print(u"未找到Chrome安装目录")
         exit(-1)
 
 def main():
-    # 启动chrome
+    # 启动chrome,如果启动失败，请删掉这一行并手动启动chrome
     launch_chrome()
 
     # 连接chrome
+    print(u"正在试图连接到Chrome")
     chrome_options = Options()
     chrome_options.add_argument('disable-infobars')
     chrome_options.add_experimental_option('debuggerAddress', '127.0.0.1:{}'.format(port_chrome))
@@ -58,7 +62,9 @@ def main():
     for item in url_videos:
         url=item["url"]
         title=item["title"]
-        title = re.sub(r"[/\\:*?\"<>|]", "",title).decode("utf-8")
+        title = re.sub(r"[/\\:*?\"<>|]", "",title)
+        if version_info.major == 2:
+            title = title.decode("utf-8")
         try:
             driver.get(url)
             if "youku" in url:
