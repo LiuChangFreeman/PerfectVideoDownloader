@@ -136,12 +136,12 @@ def main():
             else:
                 continue
             print(u"已获取到m3u8地址:\n{}\n".format(url_download))
-            command =command.format(url_download,path_to_save,title,threads,threads)
+            command_exec =command.format(url_download,path_to_save,title,threads,threads)
             if version_info.major == 2:
-                command=command.encode("gbk")
+                command_exec=command_exec.encode("gbk")
             else:
-                command=command.replace("\\\"","\"")
-            os.system(command)
+                command_exec=command_exec.replace("\\\"","\"")
+            os.system(command_exec)
             if os.path.exists(url_download):
                 os.remove(url_download)
         except Exception as e:
