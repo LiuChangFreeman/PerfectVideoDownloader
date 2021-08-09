@@ -1,4 +1,4 @@
-pywin32==225
+pywin32==301
 selenium==3.141.0
 requests==2.22.0
 beautifulsoup4==4.8.1
